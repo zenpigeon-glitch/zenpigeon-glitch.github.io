@@ -148,7 +148,10 @@ button{font:inherit;font-weight:600;background:var(--a);color:var(--btn);border:
     <div><label for="e3">Transport</label><input id="e3" type="number" step="50" value="600"></div>
     <div><label for="e5">Electricity</label><input id="e5" type="number" step="10" value="180"></div>
     <div><label for="e6">Water</label><input id="e6" type="number" step="10" value="70"></div>
+    <div><label for="e8">Hobbies</label><input id="e8" type="number" step="25" value="200"></div>
     <div><label for="e4">Other</label><input id="e4" type="number" step="50" value="1000"></div>
+    <div><label for="e7">Child care ($/month)</label><input id="e7" type="number" step="50" value="1200"></div>
+    <div><label for="e7y">Child care years remaining</label><input id="e7y" type="number" step="1" value="5"></div>
     <div><label for="car">Car payment ($/month)</label><input id="car" type="number" step="25" value="450"></div>
     <div><label for="carm">Car payment months remaining</label><input id="carm" type="number" step="1" value="36"></div>
     <div><label for="rp">Spending in retirement (% of this)</label><input id="rp" type="number" step="5" value="85"></div>
@@ -182,7 +185,7 @@ button{font:inherit;font-weight:600;background:var(--a);color:var(--btn);border:
     <p class="note" id="cn"></p>
   </section>
   <section class="panel"><h2>Year by year</h2><div class="tw"><table><thead><tr><th>Age</th><th>Salary</th><th>Spending</th><th>Withdrawn</th><th>Total savings</th></tr></thead><tbody id="rows"></tbody></table></div>
-    <p class="note">Estimates only. Figures are in future (nominal) dollars. Car payments are a fixed amount that stops when the months remaining run out. Employer match goes to the traditional balance. Withdrawals draw uninvested cash first, then brokerage, traditional, and Roth. Not tax or financial advice.</p>
+    <p class="note">Salary and all contributions (401(k), employer match, brokerage and cash) stop in the year you retire. Estimates only. Figures are in future (nominal) dollars. Child care grows with inflation and stops after the years remaining. Car payments are a fixed amount that stops when the months remaining run out. Employer match goes to the traditional balance. Withdrawals draw uninvested cash first, then brokerage, traditional, and Roth. Not tax or financial advice.</p>
   </section>
 </div>
 </div>
@@ -192,23 +195,23 @@ const $=i=>document.getElementById(i),n=i=>parseFloat($(i).value)||0;
 const m=v=>v.toLocaleString("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
 function sim(R){
   const age=Math.round(n("age")),life=Math.round(n("life")),g=n("ret")/100,inf=n("inf")/100,hi=n("hi")/100,
-    tt=n("tt")/100,tb=n("tb")/100,ssAge=n("ssage"),exp=12*(n("e1")+n("e2")+n("e3")+n("e4")+n("e5")+n("e6"));
+    tt=n("tt")/100,tb=n("tb")/100,ssAge=n("ssage"),exp=12*(n("e1")+n("e2")+n("e3")+n("e4")+n("e5")+n("e6")+n("e8"));
   let T=n("bt"),O=n("br"),B=n("bb"),C=n("bc"),sal=n("salary"),rows=[],ok=true,i=0;
   for(let a=age;a<=life;a++,i++){
-    const f=Math.pow(1+inf,i),fh=Math.pow(1+hi,i);let spend=0,w=0,s=0;const car=n("car")*Math.min(12,Math.max(0,n("carm")-12*i));
+    const f=Math.pow(1+inf,i),fh=Math.pow(1+hi,i);let spend=0,w=0,s=0;const car=n("car")*Math.min(12,Math.max(0,n("carm")-12*i)),kid=i<n("e7y")?12*n("e7")*f:0;
     if(a<R){
       s=sal;
       const t=Math.min(sal*n("ct")/100,n("lim")),r=Math.min(sal*n("cr")/100,Math.max(0,n("lim")-t));
       T+=t+sal*n("em")/100;O+=r;B+=n("cb");C+=n("cc");sal*=1+n("raise")/100;
     }else{
-      const hc=n("hc")*fh;spend=exp*n("rp")/100*f+hc+car;
+      const hc=n("hc")*fh;spend=exp*n("rp")/100*f+hc+car+kid;
       let need=spend-(a>=ssAge?n("ss")*f:0);w=Math.max(0,need);need=w;
       const pull=(bal,tax)=>{if(need<=0||bal<=0)return bal;const gross=need/(1-tax),take=Math.min(bal,gross);need-=take*(1-tax);return bal-take};
       C=pull(C,0);B=pull(B,tb);T=pull(T,tt);O=pull(O,0);
       if(need>1){ok=false;}
     }
     B*=1+g;T*=1+g;O*=1+g;C*=1+n("cy")/100;
-    rows.push({a,s,spend:a<R?exp*f+car:spend,w,T,O,B,C,tot:T+O+B+C,hc:a>=R?n("hc")*fh:0});
+    rows.push({a,s,spend:a<R?exp*f+car+kid:spend,w,T,O,B,C,tot:T+O+B+C,hc:a>=R?n("hc")*fh:0});
   }
   return{rows,ok:ok&&rows.every(r=>r.tot>=0)};
 }
